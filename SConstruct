@@ -1,5 +1,7 @@
 import os, sys, commands
+
 env = Environment(ENV = os.environ)
+env['PLATFORM'] = sys.platform
 
 # figure out a better way to configure this
 if os.environ.has_key('CXX'):
@@ -11,8 +13,8 @@ if os.environ.has_key('DEBUG'):
 if os.environ.has_key('CXXFLAGS'):
    env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
 
-if os.environ.has_key('LINKFLAGS'):
-   env.Append(LINKFLAGS = os.environ['LINKFLAGS'])
+if os.environ.has_key('LDFLAGS'):
+   env.Append(LINKFLAGS = os.environ['LDFLAGS'])
 
 
 ## WebSocket++
@@ -78,21 +80,12 @@ if env['PLATFORM'].startswith('win'):
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
-elif env['PLATFORM'] == 'posix':
+elif env['PLATFORM'] in ['posix', 'darwin'] or env['PLATFORM'].startswith('freebsd'):
    if env.has_key('DEBUG'):
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
-      env.Append(CCFLAGS = ['-O3'])
-      #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
-   env.Append(CCFLAGS = ['-Wall'])
-   #env['LINKFLAGS'] = ''
-elif env['PLATFORM'] == 'darwin':
-   if env.has_key('DEBUG'):
-      env.Append(CCFLAGS = ['-g', '-O0'])
-   else:
-      env.Append(CPPDEFINES = ['NDEBUG'])
-      env.Append(CCFLAGS = ['-O3'])
+      env.Append(CCFLAGS = ['-O3', '-march=native'])
       #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
@@ -101,8 +94,9 @@ if env['PLATFORM'].startswith('win'):
    #env['LIBPATH'] = env['BOOST_LIBS']
    pass
 else:
-   env['LIBPATH'] = ['/usr/lib',
-                     '/usr/local/lib'] #, env['BOOST_LIBS']
+   env['LIBPATH'] = ['/usr/local/lib', # make sure this comes _before: /usr/lib
+                     '/usr/lib',
+                     ] #, env['BOOST_LIBS']
 
 # Compiler specific warning flags
 if env['CXX'].startswith('g++'):
@@ -122,7 +116,7 @@ tls_libs = []
 
 tls_build = False
 
-if env['PLATFORM'] == 'posix':
+if env['PLATFORM'] == 'posix' or env['PLATFORM'].startswith('freebsd'):
    platform_libs = ['pthread', 'rt']
    tls_libs = ['ssl', 'crypto']
    tls_build = True
@@ -139,18 +133,15 @@ polyfill_libs = [] # boost libraries used as drop in replacements for incomplete
 				   # C++11 STL implementations
 env_cpp11 = env.Clone ()
 
-if env_cpp11['CXX'].startswith('g++'):
-   # TODO: check g++ version
-   GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
+print env_cpp11['CXX']
 
-   if GCC_VERSION > "4.4.0":
-      print "C++11 build environment partially enabled"
-      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
-   else:
-      print "C++11 build environment is not supported on this version of G++"
-elif env_cpp11['CXX'].startswith('clang++'):
+if 'clang++' in env_cpp11['CXX']:
    print "C++11 build environment enabled"
-   env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],LINKFLAGS = ['-stdlib=libc++'],TOOLSET = ['clang++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
+   env_cpp11.Append(WSPP_CPP11_ENABLED = "true",
+                    #CXXFLAGS = ['-std=c++0x','-stdlib=libc++'],
+                    #LINKFLAGS = ['-stdlib=libc++'],
+                    TOOLSET = ['clang++'],
+                    CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
 
    # look for optional second boostroot compiled with clang's libc++ STL library
    # this prevents warnings/errors when linking code built with two different
@@ -161,8 +152,49 @@ elif env_cpp11['CXX'].startswith('clang++'):
    elif os.environ.has_key('BOOST_INCLUDES_CPP11') and os.environ.has_key('BOOST_LIBS_CPP11'):
       env_cpp11['BOOST_INCLUDES'] = os.environ['BOOST_INCLUDES_CPP11']
       env_cpp11['BOOST_LIBS'] = os.environ['BOOST_LIBS_CPP11']
+
+elif 'g++' in env_cpp11['CXX']:
+   # TODO: check g++ version
+   GCC_VERSION = commands.getoutput(env_cpp11['CXX'] + ' -dumpversion')
+
+   if GCC_VERSION > "4.4.0":
+      print "C++11 build environment partially enabled"
+      env_cpp11.Append(WSPP_CPP11_ENABLED = "true",CXXFLAGS = ['-std=c++0x'],TOOLSET = ['g++'],CPPDEFINES = ['_WEBSOCKETPP_CPP11_STL_'])
+   else:
+      print "C++11 build environment is not supported on this version of G++"
+
 else:
    print "C++11 build environment disabled"
+
+
+
+# cd /usr/ports/lang/clang33/
+# make
+# make install
+
+# cd /usr/ports/devel/libc++
+# make
+# make install
+
+# cd /usr/src/lib/libcxxrt
+# make
+# make install
+
+# https://wiki.freebsd.org/NewC%2B%2BStack
+# https://wiki.freebsd.org/BuildingFreeBSDWithClang
+# http://blogs.freebsdish.org/theraven/tag/libcxxrt/
+# http://libcxx.llvm.org/
+
+#env.Append(CPPPATH = ['/usr/local/include/c++/v1'])
+#env_cpp11.Append(CPPPATH = ['/usr/local/include/c++/v1'])
+
+#env.Append(LIBPATH = ['/home/oberstet/scm/libcxxrt/lib'])
+#env_cpp11.Append(LIBPATH = ['/home/oberstet/scm/libcxxrt/lib'])
+
+#env.Append(LDFLAGS = ['-nostdlib', '-nodefaultlibs'])
+#env_cpp11.Append(LDFLAGS = ['-nostdlib', '-nodefaultlibs'])
+ 
+#platform_libs.extend(['libc++', 'libcxxrt'])
 
 # if the build system is known to allow the isystem modifier for library include
 # values then use it for the boost libraries. Otherwise just add them to the
