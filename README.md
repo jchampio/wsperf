@@ -64,12 +64,22 @@ Don't waste time on your distro's packaged Boost - likely too old. Build from th
 
 Also see the [Boost Getting Started](http://www.boost.org/doc/libs/1_54_0/more/getting_started/unix-variants.html).
 
-Get Boost from [here](http://sourceforge.net/projects/boost/files/boost/1.55.0.beta.1/).
+Get Boost from [here](http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/).
 
 	cd ~/build
-	tar xvjf ../tarballs/boost_1_55_0b1.tar.bz2
-	cd boost_1_55_0b1
-	./bootstrap.sh --prefix=$HOME/boost_1_55_0b1
+	tar xvjf ../tarballs/boost_1_55_0.tar.bz2
+	cd boost_1_55_0
+
+Configure to build using *Clang*
+
+	./bootstrap.sh --prefix=$HOME/boost_1_55_0 --with-toolset=clang
+
+Configure to build using *GCC*
+
+	./bootstrap.sh --prefix=$HOME/boost_1_55_0 --with-toolset=gcc
+
+Build the thing (using 4 cores)
+
 	./b2 -j 4 install
 
 This will take a little time.
