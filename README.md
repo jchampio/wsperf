@@ -45,11 +45,9 @@ The generated log file can then be post-processed with **wstest** to obtain stat
 	
 	Analyze done.
  
-
- 
 ## Building
 
-**wsperf** is currently developed and tested on Unix like systems (I use Ubuntu 12.04 LTS x64).
+**wsperf** is currently developed and tested on Unix like systems (I use Ubuntu 14.04 LTS x64).
 
 You will need a *decent* C++ compiler, currently at least *GCC 4.6* or *clang X.X*.
 
@@ -62,38 +60,37 @@ The only dependencies of **wsperf** are:
 
 Don't waste time on your distro's packaged Boost - likely too old. Build from the source, Luke;)
 
-Also see the [Boost Getting Started](http://www.boost.org/doc/libs/1_54_0/more/getting_started/unix-variants.html).
+Also see the [Boost Getting Started](http://www.boost.org/doc/libs/1_59_0/more/getting_started/unix-variants.html).
 
-Get Boost from [here](http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/).
+Get Boost from [here](http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_1_59_0.tar.bz2/).
 
 	cd ~/build
-	tar xvjf ../tarballs/boost_1_55_0.tar.bz2
-	cd boost_1_55_0
+	tar xvjf ../tarballs/boost_1_59_0.tar.bz2
+	cd boost_1_59_0
 
 Configure to build using *Clang*
 
-	./bootstrap.sh --prefix=$HOME/boost_1_55_0 --with-toolset=clang
+	./bootstrap.sh --prefix=$HOME/boost_1_59_0 --with-toolset=clang
 
 Configure to build using *GCC*
 
-	./bootstrap.sh --prefix=$HOME/boost_1_55_0 --with-toolset=gcc
+	./bootstrap.sh --prefix=$HOME/boost_1_59_0 --with-toolset=gcc
 
-Build the thing (using 4 cores)
+Build the thing (using 8 CPU cores)
 
-	./b2 -j 4 install
+	./b2 -j8 install
 
 Build on FreeBSD 9 with "NewStack":
 
-   ./b2 -j 8 toolset=clang cxxflags="-Wall -O3 -march=native -I/usr/local/include -I/usr/include -std=c++0x -stdlib=libc++" linkflags="-L/usr/local/lib -L/usr/lib -L/lib -lcxxrt -stdlib=libc++"
+   	./b2 -j8 toolset=clang cxxflags="-Wall -O3 -march=native -I/usr/local/include -I/usr/include -std=c++0x -stdlib=libc++" linkflags="-L/usr/local/lib -L/usr/lib -L/lib -lcxxrt -stdlib=libc++"
 
 Building will take a some time.
-
 
 ### WebSocket++
 
 WebSocket++ is a header-only library. So all you need is:
 
-	cd ~/scm
+	cd ~/scm/3rdparty
 	git clone git@github.com:zaphoyd/websocketpp.git
 
 ### SCons
@@ -113,13 +110,13 @@ To build **wsperf**, you will need to have 2 environment variables set:
 
 Like add the following to your `.bashrc`:
 
-	export BOOST_ROOT=${HOME}/boost_1_55_0b1
-	export WSPP_ROOT=${HOME}/scm/websocketpp
+	export BOOST_ROOT=${HOME}/boost_1_59_0
+	export WSPP_ROOT=${HOME}/scm/3rdparty/websocketpp
 
 Now get the source and build
 
-	cd ~/scm
-	git clone git@github.com:zaphoyd/wsperf.git
+	cd ~
+	git clone git@github.com:crossbario/wsperf.git
 	cd wsperf
 	scons
 
