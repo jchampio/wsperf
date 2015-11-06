@@ -82,7 +82,10 @@ Build the thing (using 8 CPU cores)
 
 Build on FreeBSD 9 with "NewStack":
 
-   	./b2 -j8 toolset=clang cxxflags="-Wall -O3 -march=native -I/usr/local/include -I/usr/include -std=c++0x -stdlib=libc++" linkflags="-L/usr/local/lib -L/usr/lib -L/lib -lcxxrt -stdlib=libc++"
+   	./b2 -j8 \
+   		toolset=clang \
+   		cxxflags="-Wall -O3 -march=native -I/usr/local/include -I/usr/include -std=c++0x -stdlib=libc++" \
+   		linkflags="-L/usr/local/lib -L/usr/lib -L/lib -lcxxrt -stdlib=libc++"
 
 Building will take a some time.
 

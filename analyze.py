@@ -123,17 +123,18 @@ def load(filename):
 
 
 def analyze(res):
+   duration_ms = float(res.durationWallclock) / 1000000.
 
    print
    print "Aggregate results (WebSocket Opening+Closing Handshake)"
    print
    #print "          Duration: %9d ms" % (float(res.duration) / 1000.)
-   print "          Duration: %9.1f s" % round(float(res.durationWallclock) / 1000000., 1)
+   print "          Duration: %9.1f s" % round(duration_ms, 1)
    print "             Total: %9d" % res.total
    print "           Success: %9d" % res.success
    print "              Fail: %9d" % res.fail
    print "            Fail %%: %9.2f" % (100. * float(res.fail) / float(res.total))
-   print "    Handshakes/sec: %9d" % int(round((float(res.success) / (float(res.durationWallclock) / 1000000.))))
+   print "    Handshakes/sec: %9d" % int(round((float(res.success) / (duration_ms / 1000.))))
    print
    printStats(res.openTimestamps)
    print

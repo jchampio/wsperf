@@ -80,12 +80,12 @@ if env['PLATFORM'].startswith('win'):
    warn_flags  = '/W3 /wd4996 /wd4995 /wd4355'
    env['CCFLAGS'] = '%s /EHsc /GR /GS- /MD /nologo %s %s' % (warn_flags, arch_flags, opt_flags)
    env['LINKFLAGS'] = '/INCREMENTAL:NO /MANIFEST /NOLOGO /OPT:REF /OPT:ICF /MACHINE:X86'
-elif env['PLATFORM'] in ['posix', 'darwin'] or env['PLATFORM'].startswith('freebsd'):
+elif env['PLATFORM'] in ['posix', 'darwin', 'linux2'] or env['PLATFORM'].startswith('freebsd'):
    if env.has_key('DEBUG'):
       env.Append(CCFLAGS = ['-g', '-O0'])
    else:
       env.Append(CPPDEFINES = ['NDEBUG'])
-      env.Append(CCFLAGS = ['-O3', '-march=native'])
+      env.Append(CCFLAGS = ['-O3', '-march=native', '-mtune=native'])
       #env.Append(CCFLAGS = ['-O3', '-fomit-frame-pointer'])
    env.Append(CCFLAGS = ['-Wall'])
    #env['LINKFLAGS'] = ''
@@ -116,7 +116,7 @@ tls_libs = []
 
 tls_build = False
 
-if env['PLATFORM'] == 'posix' or env['PLATFORM'].startswith('freebsd'):
+if env['PLATFORM'] in ['posix', 'linux2'] or env['PLATFORM'].startswith('freebsd'):
    platform_libs = ['pthread', 'rt']
    tls_libs = ['ssl', 'crypto']
    tls_build = True
