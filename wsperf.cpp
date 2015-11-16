@@ -204,6 +204,8 @@ public:
     }
 
     void test_complete() {
+        using std::chrono::nanoseconds;
+
         m_test_end = std::chrono::high_resolution_clock::now();
         m_test_end_wallclock = std::chrono::system_clock::now();
 
@@ -212,8 +214,10 @@ public:
 
         logfile << "{\"total_duration\":"
                 << std::chrono::duration_cast<dur_type>(m_test_end-m_test_start).count()
-                << ",\"started\":" << m_test_start_wallclock.time_since_epoch().count()
-                << ",\"ended\":" << m_test_end_wallclock.time_since_epoch().count()
+                << ",\"started\":"
+                << std::chrono::duration_cast<nanoseconds>(m_test_start_wallclock.time_since_epoch()).count()
+                << ",\"ended\":"
+                << std::chrono::duration_cast<nanoseconds>(m_test_end_wallclock.time_since_epoch()).count()
                 << ",\"handshake_throttle_count\":" << m_high_water_mark_count
                 << ",\"handshake_resume_count\":" << m_low_water_mark_count
                 << ",\"connection_stats\":[";
