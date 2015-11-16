@@ -129,7 +129,7 @@ def analyze(res):
    print "Aggregate results (WebSocket Opening+Closing Handshake)"
    print
    #print "          Duration: %9d ms" % (float(res.duration) / 1000.)
-   print "          Duration: %9.1f s" % round(duration_ms, 1)
+   print "          Duration: %9.1f ms" % round(duration_ms, 1)
    print "             Total: %9d" % res.total
    print "           Success: %9d" % res.success
    print "              Fail: %9d" % res.fail
