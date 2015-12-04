@@ -99,23 +99,41 @@ def load(filename):
       if prefix == 'ended':
          res.ended = value
 
+      if (prefix, event) == ('connection_stats.item', 'start_map'):
+         # Start of a new connection.
+         conn_failed = False
+         conn_pre_init = None
+         conn_open = None
+         conn_close = None
+
       if prefix == 'connection_stats.item.tcp_pre_init':
-         if res.preInitMin is None or value < res.preInitMin:
-            res.preInitMin = value
-         if res.preInitMax is None or value > res.preInitMax:
-            res.preInitMax = value
+         conn_pre_init = value
 
       if prefix == 'connection_stats.item.failed':
          if value:
+            conn_failed = True
             res.fail += 1
          else:
             res.success += 1
 
       if prefix == 'connection_stats.item.open':
-         res.openTimestamps.append(value)
+         conn_open = value
 
       if prefix == 'connection_stats.item.close':
-         res.closeTimestamps.append(value)
+         conn_close = value
+
+      if (prefix, event) == ('connection_stats.item', 'end_map'):
+         # End of a connection. Only save its statistics if it succeeded.
+         # XXX This assumes that the open/close/tcp_pre_init values are always
+         # defined by each connection object.
+         if not conn_failed:
+            if res.preInitMin is None or conn_pre_init < res.preInitMin:
+               res.preInitMin = conn_pre_init
+            if res.preInitMax is None or conn_pre_init > res.preInitMax:
+               res.preInitMax = conn_pre_init
+
+            res.openTimestamps.append(conn_open)
+            res.closeTimestamps.append(conn_close)
 
    res.total = res.success + res.fail
    res.durationWallclock = res.ended - res.started
